@@ -8,20 +8,35 @@ Every request needs a shared token.
 No dependencies beyond the Go standard library. The binary carries no server
 address or token; those live in a config file on each machine.
 
-## Build
+## Get it
+
+Prebuilt static binaries are on the [releases page](https://github.com/salagent44/pacman/releases):
+
+```sh
+curl -LO https://github.com/salagent44/pacman/releases/latest/download/pacman-linux-amd64
+chmod +x pacman-linux-amd64 && mv pacman-linux-amd64 pacman
+```
+
+Or build it yourself:
 
 ```sh
 make static        # CGO_ENABLED=0, stripped, version stamped, runs on any x86-64 Linux
 ```
 
+Pushing a `v*` tag builds amd64 and arm64 binaries and attaches them to a release.
+
 ## Server
 
-### Install on a VPS (two commands, one of them from your laptop)
+### Install on a VPS
+
+On the box:
 
 ```sh
-scp ./pacman vps:                          # from your machine
-ssh vps 'sudo ./pacman serve -install'     # on the box
+curl -LO https://github.com/salagent44/pacman/releases/latest/download/pacman-linux-amd64
+chmod +x pacman-linux-amd64 && sudo ./pacman-linux-amd64 serve -install
 ```
+
+Or `scp ./pacman vps:` a local build and run `sudo ./pacman serve -install` there.
 
 `-install` needs root and systemd. It copies the binary to `/usr/local/bin/pacman`,
 generates a token (or takes `-token T` / `PACMAN_TOKEN`) and writes it to
