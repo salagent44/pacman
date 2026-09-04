@@ -1,7 +1,7 @@
 # TODO: put pacman on prod
 
-Right now pacman runs as a systemd service on the local `pacman` VM
-(192.168.122.71, token `devtoken`). Nothing below is done yet.
+Right now pacman only runs as a systemd service on a local test VM.
+Nothing below is done yet.
 
 - [ ] **Pick and register the new domain** for this service and point an A (and AAAA)
       record at the prod box.
