@@ -14,7 +14,7 @@ token `devtoken`). Nothing below is done yet.
       Run as a dedicated `pacman` user, data in `/var/lib/pacman`.
 - [ ] **Generate and install the real token** (steps below). Never reuse `devtoken`.
 - [ ] **Firewall:** allow 80/443 only. Keep pacman bound to `127.0.0.1:8080`
-      (`-addr 127.0.0.1:8080`) so it is reachable only through the proxy.
+      (`pacman serve -addr 127.0.0.1:8080`) so it is reachable only through the proxy.
 - [ ] Update `README.md` with the domain and the deploy command once it exists.
 
 ## Getting the token onto prod
@@ -55,7 +55,7 @@ or a log line on either side.
    ```ini
    [Service]
    EnvironmentFile=/etc/pacman/env
-   ExecStart=/usr/local/bin/pacman -addr 127.0.0.1:8080 -dir /var/lib/pacman
+   ExecStart=/usr/local/bin/pacman serve -addr 127.0.0.1:8080 -dir /var/lib/pacman
    User=pacman
    ```
 
