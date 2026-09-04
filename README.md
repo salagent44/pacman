@@ -46,8 +46,10 @@ and uploads the binary into the drop so every other machine can bootstrap from i
 The token is printed exactly once; put it in your password manager.
 
 Run the same command again with a newer binary to upgrade. The existing token and
-listen address are kept unless you pass `-token` or `-addr`. Logs are in
-`journalctl -u pacman -f`. Tested on AlmaLinux 10 with SELinux enforcing.
+listen address are kept unless you pass `-token` or `-addr`. To rotate the token,
+`sudo PACMAN_TOKEN=<new> pacman serve -install` and then `pacman login` again on
+each client. Logs are in `journalctl -u pacman -f`. Tested on AlmaLinux 10 with
+SELinux enforcing and Ubuntu 24.04.
 
 Before exposing it to the internet put TLS in front, for example Caddy:
 
