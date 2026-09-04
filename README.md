@@ -16,6 +16,34 @@ make static        # CGO_ENABLED=0, stripped, version stamped, runs on any x86-6
 
 ## Server
 
+### Install on a VPS (two commands, one of them from your laptop)
+
+```sh
+scp ./pacman vps:                          # from your machine
+ssh vps 'sudo ./pacman serve -install'     # on the box
+```
+
+`-install` needs root and systemd. It copies the binary to `/usr/local/bin/pacman`,
+generates a token (or takes `-token T` / `PACMAN_TOKEN`) and writes it to
+`/etc/pacman/env` (mode 600), writes `pacman.service` with `DynamicUser` and a
+state directory at `/var/lib/pacman`, enables and starts it, waits for `/healthz`,
+and uploads the binary into the drop so every other machine can bootstrap from it.
+The token is printed exactly once; put it in your password manager.
+
+Run the same command again with a newer binary to upgrade. The existing token and
+listen address are kept unless you pass `-token` or `-addr`. Logs are in
+`journalctl -u pacman -f`. Tested on AlmaLinux 10 with SELinux enforcing.
+
+Before exposing it to the internet put TLS in front, for example Caddy:
+
+```
+your.domain { reverse_proxy 127.0.0.1:8080 }
+```
+
+then set `PACMAN_ADDR=127.0.0.1:8080` in `/etc/pacman/env` and `systemctl restart pacman`.
+
+### Run by hand
+
 ```sh
 PACMAN_TOKEN=changeme ./pacman serve -addr :8080 -dir /var/lib/pacman
 ```
@@ -100,14 +128,13 @@ make test
 ```sh
 make static
 virtman make alma10 --name pacman
-scp ./pacman pacman:~/pacman
-ssh pacman 'PACMAN_TOKEN=devtoken ~/pacman serve -addr :8080 -dir ~/pacman-data'
+scp ./pacman pacman:
+ssh pacman 'sudo ./pacman serve -install'      # prints the token once
 ```
 
-Then upload the client to itself and bootstrap any other VM from it:
+Then bootstrap any other VM from it:
 
 ```sh
-curl -T ./pacman 'http://<vm-ip>:8080/files/pacman?token=devtoken'
-ssh other-vm "curl -OJ 'http://<vm-ip>:8080/files/pacman?token=devtoken' && chmod +x pacman \
-  && ./pacman login http://<vm-ip>:8080 devtoken && ./pacman install pacman && pacman ls"
+ssh other-vm "curl -OJ 'http://<vm-ip>:8080/files/pacman?token=<token>' && chmod +x pacman \
+  && ./pacman login http://<vm-ip>:8080 <token> && ./pacman install pacman && pacman ls"
 ```

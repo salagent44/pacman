@@ -251,41 +251,7 @@ func (c *client) download(name, dest string, mode os.FileMode) (int64, error) {
 		return 0, err
 	}
 	defer resp.Body.Close()
-
-	dir := filepath.Dir(dest)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return 0, err
-	}
-	tmp, err := os.CreateTemp(dir, ".pacman-*")
-	if err != nil {
-		return 0, err
-	}
-	tmpName := tmp.Name()
-	fail := func(err error) (int64, error) {
-		tmp.Close()
-		os.Remove(tmpName)
-		return 0, err
-	}
-	n, err := io.Copy(tmp, resp.Body)
-	if err != nil {
-		return fail(err)
-	}
-	if err := tmp.Sync(); err != nil {
-		return fail(err)
-	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmpName)
-		return 0, err
-	}
-	if err := os.Chmod(tmpName, mode); err != nil {
-		os.Remove(tmpName)
-		return 0, err
-	}
-	if err := os.Rename(tmpName, dest); err != nil {
-		os.Remove(tmpName)
-		return 0, err
-	}
-	return n, nil
+	return writeAtomic(dest, resp.Body, mode)
 }
 
 func (c *client) remove(name string) error {

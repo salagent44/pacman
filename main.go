@@ -30,6 +30,10 @@ const usageText = `pacman - a tiny binary drop with token auth
 Server:
   pacman serve [-addr :8080] [-dir ./data] [-token T]
         env: PACMAN_ADDR, PACMAN_DIR, PACMAN_TOKEN (preferred for the token)
+  sudo pacman serve -install [-addr :8080] [-token T]
+        install as a systemd service: binary to /usr/local/bin, token to
+        /etc/pacman/env (generated if not given), data in /var/lib/pacman,
+        started and enabled. Re-run to upgrade; the token is kept.
 
 Client:
   pacman login URL TOKEN          save the server and token to ~/.config/pacman/config
@@ -82,7 +86,26 @@ func serve(args []string) {
 	addr := fs.String("addr", envOr("PACMAN_ADDR", ":8080"), "listen address (env PACMAN_ADDR)")
 	dir := fs.String("dir", envOr("PACMAN_DIR", "./data"), "storage directory (env PACMAN_DIR)")
 	token := fs.String("token", os.Getenv("PACMAN_TOKEN"), "auth token, required (env PACMAN_TOKEN, preferred so it stays out of ps)")
+	install := fs.Bool("install", false, "install as a systemd service and start it (needs root)")
 	fs.Parse(args)
+
+	if *install {
+		set := map[string]bool{}
+		fs.Visit(func(f *flag.Flag) { set[f.Name] = true })
+		if set["dir"] {
+			fmt.Fprintf(os.Stderr, "pacman serve -install: data always lives in %s; -dir is not supported here\n", installData)
+			os.Exit(2)
+		}
+		addrArg := ""
+		if set["addr"] {
+			addrArg = *addr
+		}
+		if err := installServer(addrArg, *token, os.Stdout); err != nil {
+			fmt.Fprintln(os.Stderr, "pacman serve -install:", err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	if *token == "" {
 		fmt.Fprintln(os.Stderr, "pacman serve: a token is required (set PACMAN_TOKEN or pass -token)")
