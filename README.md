@@ -23,7 +23,10 @@ Or build it yourself:
 make static        # CGO_ENABLED=0, stripped, version stamped, runs on any x86-64 Linux
 ```
 
-Pushing a `v*` tag builds amd64 and arm64 binaries and attaches them to a release.
+Releases are cut locally, never by CI: `make release VERSION=v0.2.0` builds amd64
+and arm64, writes `SHA256SUMS`, and creates the GitHub release with `gh`.
+`make publish` builds and pushes the binary into your own drop so machines pick
+it up with `pacman update`.
 
 ## Server
 
